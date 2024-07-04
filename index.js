@@ -1,4 +1,6 @@
 const express =require('express')
+const cors = require('cors'); // Import CORS module
+
 const productRoutes = require('./Route/product');
 const userRoutes =require('./Route/user')
 const bodyParser = require('body-parser');
@@ -8,6 +10,7 @@ const connectdb =require('./db/connect')
 
 const app=express();
 app.use(express.json());
+app.use(cors());
 
 app.use(userRoutes)
 app.use(productRoutes)

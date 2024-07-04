@@ -21,7 +21,7 @@ const start =async()=>{
     try{
         await connectdb()
         app.listen(PORT,()=>{
-            console.log(`connection sucessful`)
+            console.log(`connection sucessful app is running on ${PORT}`)
         })
     }
     catch(e){

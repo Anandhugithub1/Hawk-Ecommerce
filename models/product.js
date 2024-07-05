@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const sizeOptions = ['S', 'M', 'L','XL'];
+const categoryOptions = ['tshirt', 'hoodie', 'sweatshirt', 'pants', 'jacket'];
 
 const ProductSchema = new Schema({
     name: {
@@ -13,6 +14,7 @@ const ProductSchema = new Schema({
         type: String,
         required: true
     },
+    
     images: {
         type: [String],
         required: true
@@ -36,6 +38,11 @@ const ProductSchema = new Schema({
             default: 0
         }
     }],
+    availableSizes: {
+        type: [String],
+        enum: sizeOptions,
+        default:sizeOptions
+    },
     discountedPrice: {
         type: Number,
         default: null
@@ -43,6 +50,11 @@ const ProductSchema = new Schema({
     discountPercentage: {
         type: Number,
         default: null
+    },
+    category: {
+        type: String,
+        enum: categoryOptions,
+        required: true
     },
     stockAvailability: {
         type: Boolean,

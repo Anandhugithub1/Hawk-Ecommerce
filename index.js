@@ -3,6 +3,8 @@ const cors = require('cors'); // Import CORS module
 
 const productRoutes = require('./Route/product');
 const userRoutes =require('./Route/user')
+const cartRoutes =require('./Route/cart')
+
 const bodyParser = require('body-parser');
 
 require('dotenv').config();
@@ -13,6 +15,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use(userRoutes)
+app.use(cartRoutes)
 app.use(productRoutes)
 app.use(bodyParser.json());
 

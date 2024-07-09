@@ -1,21 +1,24 @@
 // controllers/authController.js
 const User = require('../models/user');
+const jwt = require("jsonwebtoken");
 
 const bcrypt = require('bcryptjs');
-const otpGenerator = require('otp-generator'); 
 
 
 const register = async (req, res) => {
     const { email, password, phone, name } = req.body;
-
+    if (!email || !password || !phone || !name) {
+        return res.status(400).json({ message: 'please fill all fields' });
+    }
     try {
         // Check if user with email or phone already exists
-        let user = await User.findOne({ $or: [{ email }, { phone }] });
-        if (user) {
+        let  existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+        if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
         // Hash the password
+        
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create new user
@@ -35,67 +38,34 @@ const register = async (req, res) => {
     }
 };
 
-// Controller function to login user with phone and OTP
-const loginWithOTP = async (req, res) => {
-    const { phone } = req.body;
+// Controller function to login user with email and password
+const login = async (req, res) => {
+    const { email, password } = req.body;
 
     try {
-        // Find user by phone number
-        const user = await User.findOne({ phone });
+        // Find user by email
+        const user = await User.findOne({ email });
 
         if (!user) {
             return res.status(400).json({ message: 'User not found' });
         }
 
-        // Generate OTP (example: 4-digit OTP)
-        const generatedOTP = otpGenerator.generate(4, { digits: true, alphabets: false, upperCase: false, specialChars: false });
+        // Check if password matches
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
 
-        // Save OTP and OTP expiry (example: OTP valid for 5 minutes)
-        user.otp = generatedOTP;
-        user.otpExpiry = new Date();
-        user.otpExpiry.setMinutes(user.otpExpiry.getMinutes() + 5); // OTP valid for 5 minutes
-        await user.save();
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id }, "your_secret_key", { expiresIn: "1h" });
 
-        // Simulate sending OTP via SMS (replace with actual SMS sending code)
-        console.log(`OTP for login: ${generatedOTP}`);
-
-        res.json({ message: 'OTP sent to phone number' });
+        res.json({ message: 'Login successful', token });
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 };
-
-// Controller function to verify OTP and login user
-const verifyOTPAndLogin = async (req, res) => {
-    const { phone, otp } = req.body;
-
-    try {
-        // Find user by phone number and OTP
-        const user = await User.findOne({ phone, otp });
-
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid OTP or phone number' });
-        }
-
-        // Check if OTP has expired
-        if (user.otpExpiry < new Date()) {
-            return res.status(400).json({ message: 'OTP has expired. Please request a new OTP.' });
-        }
-
-        // Clear OTP and OTP expiry after successful login
-        user.otp = null;
-        user.otpExpiry = null;
-        await user.save();
-
-        res.json({ message: 'Login successful' });
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-};
-
 
 module.exports = {
     register,
-    loginWithOTP,
-    verifyOTPAndLogin
+  login
 };
